@@ -1,0 +1,185 @@
+*{
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: "Raleway", sans-serif;
+    font-optical-sizing: auto;
+    font-weight: 300;
+    font-style: normal;
+    color: #fff;
+}
+
+body{
+    background-color: #000;
+}
+
+.nav_container{
+    display: flex;
+    justify-content: space-between;
+    padding: 5px 20px 5px 20px;
+    align-items: center;
+}
+
+.nav_container .logo h2{
+    font-family: "Raleway", sans-serif;
+    font-optical-sizing: auto;
+    font-weight: 500;
+    font-style: normal;
+}
+
+.nav_container .logo span{
+    font-family: "Raleway", sans-serif;
+    font-optical-sizing: auto;
+    font-weight: 500;
+    font-style: normal;
+    color: rgb(17, 217, 44);
+}
+
+.perfil img{
+    width: 60px;
+    border-radius: 50%;
+}
+
+.perfil{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 200px;
+}
+
+.imagen-perfil{
+    border: 2px solid rgb(255, 255, 255);
+    border-radius: 50%;
+    width: 70px;
+    height: 70px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.hero{
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    height: 90vh;
+}
+
+.datosDeLaNota{
+    padding: 30px;
+    border: 2px solid #fff;
+    width: 50%;
+}
+
+
+#Titulo{
+    width: 70%;
+    background-color: transparent;
+    border: none;
+    border:2px solid  #fff;
+    outline: none;
+    padding: 5px;
+    border-radius: 7px;
+}
+
+
+.inputs{
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.datosDeLaNota button{
+    background-color: transparent;
+    border: 2px solid #fff;
+    border-radius: 5px;
+    padding: 10px;
+    cursor: pointer;
+    transition: all .5s;
+}
+
+.datosDeLaNota button:hover{
+    border: 2px solid #aaaaaa;
+    color: #aaa;
+}
+
+.dato{
+    border: 2px solid #fff;
+    width: 50%;
+    border-radius: 7px;
+    margin: 20px 0 20px 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+}
+
+
+.subir{
+    width: 50%;
+}
+
+.datoTitulo h2, p{
+    margin: 10px 0 10px 0;
+}
+
+.botonBorrar button{
+    background-color: transparent;
+    border: 2px solid #fff;
+    border-radius: 5px;
+    padding: 10px;
+    cursor: pointer;
+    transition: all .5s;
+}
+
+.botonBorrar button:hover{
+    border: 2px solid #aaaaaa;
+    color: #aaa;
+}
+
+.datos-ya-creado{
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.divh2{
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    gap: 10px;
+}
+
+.divh2 input{
+    appearance: none;
+    background-color: transparent;
+    border: 2px solid #fff;
+    width: 20px;
+    height: 20px;
+    border-radius: 5px;
+    cursor: pointer;    
+}
+
+.divh2 input:checked::before{
+    content: "";
+    width: 100%;
+    height: 100%;
+    background: url("White_check.svg");
+    background-size: 100%;
+    display: block;
+}
+
+@media (max-width: 360px) {
+    .perfil{
+        width: 45%;
+    }
+    .datosDeLaNota{
+        width: 90%;
+    }
+    .dato{
+        width: 90%;
+    }
+}
