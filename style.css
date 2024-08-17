@@ -175,6 +175,7 @@ body{
 @media (max-width: 600px) {
     .perfil{
         width: 45%;
+        gap: 10px;
     }
     .datosDeLaNota{
         width: 90%;
