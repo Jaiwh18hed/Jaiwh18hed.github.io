@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+<title>Sistema Endocrino 3D | Aprendizaje Interactivo</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+  * { scroll-behavior: smooth; -webkit-tap-highlight-color: transparent; }
+  body { 
+    font-family: 'Segoe UI', sans-serif; 
+    background: #0a0e1a;
+    overflow-x: hidden;
+  }
+
+  /* Fondo animado mejorado */
+  .gradient-bg {
+    background: linear-gradient(-45deg, #0a0e1a, #1a1042, #0d2847, #2d1b4e, #0a0e1a);
+    background-size: 400% 400%;
+    animation: gradientShift 18s ease infinite;
+  }
+  @keyframes gradientShift {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+
+  /* Blobs animados de fondo */
+  .blob {
+    position: fixed;
+    border-radius: 50%;
+    filter: blur(80px);
+    opacity: 0.4;
+    z-index: 0;
+    pointer-events: none;
+    animation: blobMove 25s infinite ease-in-out;
+  }
+  @keyframes blobMove {
+    0%, 100% { transform: translate(0,0) scale(1); }
+    25% { transform: translate(40px,-60px) scale(1.2); }
+    50% { transform: translate(-30px,40px) scale(0.9); }
+    75% { transform: translate(50px,30px) scale(1.1); }
+  }
+
+  /* Partículas */
+  .particle {
+    position: fixed;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(167,139,250,0.8), transparent);
+    animation: floatUp linear infinite;
+    pointer-events: none;
+    z-index: 1;
+  }
+  @keyframes floatUp {
+    0% { transform: translateY(100vh) scale(0); opacity: 0; }
+    10% { opacity: 1; }
+    90% { opacity: 1; }
+    100% { transform: translateY(-50px) scale(1); opacity: 0; }
+  }
+
+  /* Líneas onduladas animadas */
+  .wave-line {
+    position: fixed;
+    width: 200%;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, rgba(236,72,153,0.5), transparent);
+    z-index: 0;
+    pointer-events: none;
+    animation: waveSlide 8s linear infinite;
+  }
+  @keyframes waveSlide {
+    0% { transform: translateX(-50%); }
+    100% { transform: translateX(0%); }
+  }
+
+  /* Hexágonos rotando */
+  .hexagon {
+    position: fixed;
+    border: 1px solid rgba(139,92,246,0.2);
+    z-index: 0;
+    pointer-events: none;
+    animation: spin linear infinite;
+  }
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+
+  .content { position: relative; z-index: 10; }
+
+  /* Tarjetas 3D */
+  .card-3d {
+    transition: transform 0.4s ease, box-shadow 0.4s ease, border-color 0.4s;
+    background: rgba(255,255,255,0.05);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(139,92,246,0.3);
+    cursor: pointer;
+  }
+  .card-3d:active {
+    transform: scale(0.98);
+  }
+  @media(hover:hover) {
+    .card-3d:hover {
+      transform: translateY(-8px);
+      box-shadow: 0 20px 40px rgba(139,92,246,0.4);
+      border-color: rgba(139,92,246,0.8);
+    }
+  }
+
+  /* Detalle expandible */
+  .detail {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.5s ease, margin 0.3s, padding 0.3s;
+    opacity: 0;
+  }
+  .detail.open {
+    max-height: 500px;
+    opacity: 1;
+    margin-top: 0.75rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid rgba(139,92,246,0.3);
+  }
+
+  .text-gradient {
+    background: linear-gradient(135deg, #a78bfa, #ec4899, #38bdf8);
+    background-size: 200% 200%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: textShine 4s ease infinite;
+  }
+  @keyframes textShine {
+    0%,100% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+  }
+
+  .reveal {
+    opacity: 0;
+    transform: translateY(40px);
+    transition: all 0.7s ease;
+  }
+  .reveal.active { opacity: 1; transform: translateY(0); }
+
+  .nav-glass {
+    background: rgba(10,14,26,0.9);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid rgba(139,92,246,0.3);
+  }
+
+  .glow-btn {
+    box-shadow: 0 0 20px rgba(139,92,246,0.5);
+    transition: all 0.3s;
+  }
+  .glow-btn:active { transform: scale(0.95); }
+
+  .expand-icon { transition: transform 0.4s; }
+  .expand-icon.rotated { transform: rotate(180deg); }
+
+  /* Menu movil */
+  #mobileMenu {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.4s ease;
+  }
+  #mobileMenu.open { max-height: 400px; }
+
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: #0a0e1a; }
+  ::-webkit-scrollbar-thumb { background: linear-gradient(#a78bfa, #ec4899); border-radius: 5px; }
+
+  .tap-hint {
+    animation: tapPulse 2s infinite;
+  }
+  @keyframes tapPulse {
+    0%,100% { opacity: 0.5; }
+    50% { opacity: 1; }
+  }
+</style>
+</head>
+<body class="gradient-bg text-white">
+
+<!-- Blobs de fondo -->
+<div class="blob" style="width:300px;height:300px;background:#8b5cf6;top:10%;left:-50px;"></div>
+<div class="blob" style="width:250px;height:250px;background:#ec4899;top:40%;right:-50px;animation-delay:5s;"></div>
+<div class="blob" style="width:280px;height:280px;background:#38bdf8;bottom:10%;left:20%;animation-delay:10s;"></div>
+
+<!-- NAVBAR -->
+<nav class="nav-glass fixed top-0 w-full z-50 px-4 py-3">
+  <div class="max-w-7xl mx-auto flex justify-between items-center">
+    <div class="text-xl font-bold text-gradient">🧬 EndoLab 3D</div>
+    <div class="hidden md:flex gap-5 text-sm">
+      <a href="#inicio" class="hover:text-purple-400 transition">Inicio</a>
+      <a href="#que-es" class="hover:text-purple-400 transition">¿Qué es?</a>
+      <a href="#funciones" class="hover:text-purple-400 transition">Funciones</a>
+      <a href="#glandulas" class="hover:text-purple-400 transition">Glándulas</a>
+      <a href="#hormonas" class="hover:text-purple-400 transition">Hormonas</a>
+      <a href="#enfermedades" class="hover:text-purple-400 transition">Enfermedades</a>
+      <a href="#quiz" class="hover:text-purple-400 transition">Quiz</a>
+    </div>
+    <button onclick="document.getElementById('mobileMenu').classList.toggle('open')" class="md:hidden text-2xl">☰</button>
+  </div>
+  <div id="mobileMenu" class="md:hidden">
+    <div class="flex flex-col gap-1 pt-3 text-sm">
+      <a href="#inicio" onclick="closeMenu()" class="py-2 px-2 rounded hover:bg-purple-600/30">🏠 Inicio</a>
+      <a href="#que-es" onclick="closeMenu()" class="py-2 px-2 rounded hover:bg-purple-600/30">❓ ¿Qué es?</a>
+      <a href="#funciones" onclick="closeMenu()" class="py-2 px-2 rounded hover:bg-purple-600/30">⚡ Funciones</a>
+      <a href="#glandulas" onclick="closeMenu()" class="py-2 px-2 rounded hover:bg-purple-600/30">🦋 Glándulas</a>
+      <a href="#hormonas" onclick="closeMenu()" class="py-2 px-2 rounded hover:bg-purple-600/30">🧪 Hormonas</a>
+      <a href="#enfermedades" onclick="closeMenu()" class="py-2 px-2 rounded hover:bg-purple-600/30">🩺 Enfermedades</a>
+      <a href="#quiz" onclick="closeMenu()" class="py-2 px-2 rounded hover:bg-purple-600/30">🎯 Quiz</a>
+    </div>
+  </div>
+</nav>
+
+<div class="content">
+
+<!-- HERO -->
+<section id="inicio" class="min-h-screen flex items-center justify-center pt-24 pb-12 px-5">
+  <div class="max-w-3xl mx-auto text-center reveal active">
+    <div class="text-7xl mb-6 animate-bounce">🧬</div>
+    <p class="text-purple-400 font-semibold mb-3 tracking-widest text-xs">BIOLOGÍA · SISTEMA ENDOCRINO</p>
+    <h1 class="text-4xl md:text-6xl font-black mb-5 text-gradient leading-tight">El Sistema Endocrino</h1>
+    <p class="text-gray-300 text-base md:text-lg mb-8 px-2">Exposicion Por Andres felipe holguin orrego Y elvis Ruiz Sobre el sistema endocrino!</p>
+    <div class="flex flex-col sm:flex-row gap-3 justify-center">
+      <a href="#que-es" class="glow-btn bg-gradient-to-r from-purple-600 to-pink-600 px-8 py-3 rounded-full font-bold">Comenzar 🚀</a>
+      <a href="#quiz" class="border border-purple-400 px-8 py-3 rounded-full font-bold hover:bg-purple-600/20 transition">Quiz (10) 🎯</a>
+    </div>
+  </div>
+</section>
+
+<!-- QUE ES -->
+<section id="que-es" class="py-20 px-5">
+  <div class="max-w-4xl mx-auto">
+    <h2 class="text-3xl md:text-5xl font-black text-center mb-3 text-gradient reveal">¿Qué es el Sistema Endocrino?</h2>
+    <p class="text-center text-gray-400 mb-8 text-sm reveal tap-hint">👆 Toca las tarjetas para ampliar</p>
+    <div class="grid md:grid-cols-2 gap-5">
+      <div class="card-3d rounded-2xl p-6 reveal" onclick="toggle(this)">
+        <div class="flex justify-between items-start"><div class="text-4xl mb-3">🧪</div><span class="expand-icon text-purple-400">▼</span></div>
+        <h3 class="text-xl font-bold mb-2 text-purple-300">Glándulas y Hormonas</h3>
+        <p class="text-gray-300 text-sm">Conjunto de glándulas y órganos que producen sustancias químicas llamadas hormonas.</p>
+        <div class="detail text-purple-200 text-sm">Las hormonas viajan por la sangre hasta órganos o tejidos específicos donde cumplen funciones determinadas. Es la red de comunicación química de tu cuerpo, complementando al sistema nervioso pero de forma más lenta y duradera.</div>
+      </div>
+      <div class="card-3d rounded-2xl p-6 reveal" onclick="toggle(this)">
+        <div class="flex justify-between items-start"><div class="text-4xl mb-3">📨</div><span class="expand-icon text-pink-400">▼</span></div>
+        <h3 class="text-xl font-bold mb-2 text-pink-300">Mensajeros del Cuerpo</h3>
+        <p class="text-gray-300 text-sm">Las hormonas son como mensajes que indican al cuerpo qué hacer y cuándo.</p>
+        <div class="detail text-purple-200 text-sm">Gracias a las hormonas nuestro cuerpo sabe cuándo crecer, cuándo sentir hambre, cuándo dormir y cómo reaccionar ante situaciones de estrés. Cada hormona tiene un "receptor" específico, como una llave que solo abre cierta cerradura.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FUNCIONES -->
+<section id="funciones" class="py-20 px-5 bg-black/20">
+  <div class="max-w-5xl mx-auto">
+    <h2 class="text-3xl md:text-5xl font-black text-center mb-3 text-gradient reveal">Funciones Principales</h2>
+    <p class="text-center text-gray-400 mb-8 text-sm reveal tap-hint">👆 Toca para ver detalles</p>
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div class="card-3d rounded-2xl p-5 reveal" onclick="toggle(this)"><div class="flex justify-between"><div class="text-3xl mb-2">📏</div><span class="expand-icon text-purple-400 text-sm">▼</span></div><h3 class="font-bold text-purple-300">Crecimiento</h3><p class="text-gray-400 text-sm">Regula el crecimiento y desarrollo.</p><div class="detail text-purple-200 text-sm">La hormona del crecimiento (GH) producida por la hipófisis controla el aumento de tamaño de huesos y tejidos desde la infancia hasta la adultez.</div></div>
+      <div class="card-3d rounded-2xl p-5 reveal" onclick="toggle(this)"><div class="flex justify-between"><div class="text-3xl mb-2">⚡</div><span class="expand-icon text-purple-400 text-sm">▼</span></div><h3 class="font-bold text-purple-300">Metabolismo</h3><p class="text-gray-400 text-sm">Controla la obtención de energía.</p><div class="detail text-purple-200 text-sm">La tiroides regula la velocidad con la que el cuerpo quema calorías y produce energía. Afecta tu peso, temperatura y nivel de actividad.</div></div>
+      <div class="card-3d rounded-2xl p-5 reveal" onclick="toggle(this)"><div class="flex justify-between"><div class="text-3xl mb-2">⚖️</div><span class="expand-icon text-purple-400 text-sm">▼</span></div><h3 class="font-bold text-purple-300">Equilibrio Interno</h3><p class="text-gray-400 text-sm">Mantiene la homeostasis.</p><div class="detail text-purple-200 text-sm">Mantiene constantes los niveles de agua, sales, azúcar y temperatura, sin importar los cambios del ambiente externo.</div></div>
+      <div class="card-3d rounded-2xl p-5 reveal" onclick="toggle(this)"><div class="flex justify-between"><div class="text-3xl mb-2">😴</div><span class="expand-icon text-purple-400 text-sm">▼</span></div><h3 class="font-bold text-purple-300">Sueño y Ánimo</h3><p class="text-gray-400 text-sm">Regula descanso y emociones.</p><div class="detail text-purple-200 text-sm">La melatonina controla el ciclo de sueño, mientras la serotonina y otras hormonas influyen en tu estado de ánimo y bienestar.</div></div>
+      <div class="card-3d rounded-2xl p-5 reveal" onclick="toggle(this)"><div class="flex justify-between"><div class="text-3xl mb-2">👶</div><span class="expand-icon text-purple-400 text-sm">▼</span></div><h3 class="font-bold text-purple-300">Reproducción</h3><p class="text-gray-400 text-sm">Controla la maduración sexual.</p><div class="detail text-purple-200 text-sm">Los estrógenos, progesterona y testosterona controlan el desarrollo sexual durante la pubertad y la capacidad reproductiva.</div></div>
+      <div class="card-3d rounded-2xl p-5 reveal" onclick="toggle(this)"><div class="flex justify-between"><div class="text-3xl mb-2">🛡️</div><span class="expand-icon text-purple-400 text-sm">▼</span></div><h3 class="font-bold text-purple-300">Respuesta al Estrés</h3><p class="text-gray-400 text-sm">Reacciona ante el peligro.</p><div class="detail text-purple-200 text-sm">La adrenalina y el cortisol preparan al cuerpo para "luchar o huir": aceleran el corazón, aumentan la energía y agudizan los sentidos.</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- GLANDULAS -->
+<section id="glandulas" class="py-20 px-5">
+  <div class="max-w-5xl mx-auto">
+    <h2 class="text-3xl md:text-5xl font-black text-center mb-3 text-gradient reveal">Principales Glándulas</h2>
+    <p class="text-center text-gray-400 mb-8 text-sm reveal tap-hint">👆 Toca cada glándula para más info</p>
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+
+      <div class="card-3d rounded-2xl p-5 reveal" onclick="toggle(this)">
+        <div class="flex justify-between items-center mb-2"><div class="flex items-center gap-2"><span class="text-2xl">🧠</span><h3 class="text-lg font-bold text-pink-300">Hipotálamo</h3></div><span class="expand-icon text-pink-400 text-sm">▼</span></div>
+        <p class="text-gray-400 text-sm">Centro de control en el cerebro.</p>
+        <div class="detail text-purple-200 text-sm">Coordina la comunicación entre el sistema nervioso y el endocrino. También regula la temperatura corporal, el hambre, la sed y el sueño. Es el "puente" entre tus pensamientos y tus hormonas.</div>
+      </div>
+
+      <div class="card-3d rounded-2xl p-5 reveal" onclick="toggle(this)">
+        <div class="flex justify-between items-center mb-2"><div class="flex items-center gap-2"><span class="text-2xl">👑</span><h3 class="text-lg font-bold text-pink-300">Hipófisis</h3></div><span class="expand-icon text-pink-400 text-sm">▼</span></div>
+        <p class="text-gray-400 text-sm">La "glándula maestra".</p>
+        <div class="detail text-purple-200 text-sm">Controla a muchas otras glándulas. Produce hormonas relacionadas con el crecimiento, la reproducción, la producción de leche materna y el equilibrio de agua en el cuerpo. Del tamaño de un guisante, pero ¡muy poderosa!</div>
+      </div>
+
+      <div class="card-3d rounded-2xl p-5 reveal" onclick="toggle(this)">
+        <div class="flex justify-between items-center mb-2"><div class="flex items-center gap-2"><span class="text-2xl">🦋</span><h3 class="text-lg font-bold text-blue-300">Tiroides</h3></div><span class="expand-icon text-blue-400 text-sm">▼</span></div>
+        <p class="text-gray-400 text-sm">Ubicada en el cuello.</p>
+        <div class="detail text-purple-200 text-sm">Produce hormonas que regulan el metabolismo, es decir, la velocidad con la que el cuerpo utiliza la energía. Cuando funciona demasiado rápido o lento aparecen problemas de salud. Tiene forma de mariposa.</div>
+      </div>
+
+      <div class="card-3d rounded-2xl p-5 reveal" onclick="toggle(this)">
+        <div class="flex justify-between items-center mb-2"><div class="flex items-center gap-2"><span class="text-2xl">🦴</span><h3 class="text-lg font-bold text-blue-300">Paratiroides</h3></div><span class="expand-icon text-blue-400 text-sm">▼</span></div>
+        <p class="text-gray-400 text-sm">Detrás de la tiroides.</p>
+        <div class="detail text-purple-200 text-sm">Son pequeñas glándulas que controlan los niveles de calcio en la sangre y huesos. El calcio es fundamental para músculos, nervios y huesos. Son solo 4 y diminutas.</div>
+      </div>
+
+      <div class="card-3d rounded-2xl p-5 reveal" onclick="toggle(this)">
+        <div class="flex justify-between items-center mb-2"><div class="flex items-center gap-2"><span class="text-2xl">⚡</span><h3 class="text-lg font-bold text-yellow-300">Suprarrenales</h3></div><span class="expand-icon text-yellow-400 text-sm">▼</span></div>
+        <p class="text-gray-400 text-sm">Encima de los riñones.</p>
+        <div class="detail text-purple-200 text-sm">Producen adrenalina y cortisol, que ayudan a responder ante situaciones de peligro o estrés. Cuando sentimos miedo, la adrenalina aumenta los latidos del corazón y nos prepara para reaccionar rápido.</div>
+      </div>
+
+      <div class="card-3d rounded-2xl p-5 reveal" onclick="toggle(this)">
+        <div class="flex justify-between items-center mb-2"><div class="flex items-center gap-2"><span class="text-2xl">🍬</span><h3 class="text-lg font-bold text-green-300">Páncreas</h3></div><span class="expand-icon text-green-400 text-sm">▼</span></div>
+        <p class="text-gray-400 text-sm">Regula el azúcar en sangre.</p>
+        <div class="detail text-purple-200 text-sm">Produce dos hormonas: insulina (baja el azúcar) y glucagón (sube el azúcar). Juntas mantienen el equilibrio de glucosa. Cuando la insulina no funciona bien, aparece la diabetes.</div>
+      </div>
+
+      <div class="card-3d rounded-2xl p-5 reveal sm:col-span-2 lg:col-span-3" onclick="toggle(this)">
+        <div class="flex justify-between items-center mb-2"><div class="flex items-center gap-2"><span class="text-2xl">⚥</span><h3 class="text-lg font-bold text-red-300">Gónadas (Órganos Reproductores)</h3></div><span class="expand-icon text-red-400 text-sm">▼</span></div>
+        <p class="text-gray-400 text-sm">Testículos y ovarios.</p>
+        <div class="detail text-purple-200 text-sm">En hombres: los testículos producen testosterona. En mujeres: los ovarios producen estrógenos y progesterona. Estas hormonas participan en el desarrollo sexual durante la pubertad y la reproducción.</div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- HORMONAS -->
+<section id="hormonas" class="py-20 px-5 bg-black/20">
+  <div class="max-w-5xl mx-auto">
+    <h2 class="text-3xl md:text-5xl font-black text-center mb-3 text-gradient reveal">Las Hormonas</h2>
+    <p class="text-center text-gray-400 mb-8 text-sm reveal">Mensajeros químicos del cuerpo</p>
+    <div class="grid md:grid-cols-2 gap-6 items-center">
+      <div class="space-y-3">
+        <div class="card-3d rounded-xl p-4 reveal" onclick="toggle(this)"><div class="flex justify-between"><span class="font-bold text-green-400">🟢 Insulina</span><span class="expand-icon text-sm">▼</span></div><div class="detail text-purple-200 text-sm">Producida por el páncreas, reduce el azúcar en sangre al permitir que las células la absorban como energía.</div></div>
+        <div class="card-3d rounded-xl p-4 reveal" onclick="toggle(this)"><div class="flex justify-between"><span class="font-bold text-yellow-400">🟡 Adrenalina</span><span class="expand-icon text-sm">▼</span></div><div class="detail text-purple-200 text-sm">La hormona de la emergencia. Acelera el corazón, dilata pupilas y prepara los músculos para una reacción rápida.</div></div>
+        <div class="card-3d rounded-xl p-4 reveal" onclick="toggle(this)"><div class="flex justify-between"><span class="font-bold text-pink-400">🩷 H. del Crecimiento</span><span class="expand-icon text-sm">▼</span></div><div class="detail text-purple-200 text-sm">Estimula el crecimiento de huesos y músculos. Su exceso causa gigantismo y su falta, enanismo.</div></div>
+        <div class="card-3d rounded-xl p-4 reveal" onclick="toggle(this)"><div class="flex justify-between"><span class="font-bold text-blue-400">🔵 Tiroxina</span><span class="expand-icon text-sm">▼</span></div><div class="detail text-purple-200 text-sm">Producida por la tiroides, regula el metabolismo y la velocidad con que el cuerpo usa la energía.</div></div>
+        <div class="card-3d rounded-xl p-4 reveal" onclick="toggle(this)"><div class="flex justify-between"><span class="font-bold text-red-400">🔴 Estrógenos / Testosterona</span><span class="expand-icon text-sm">▼</span></div><div class="detail text-purple-200 text-sm">Hormonas sexuales que controlan el desarrollo de características masculinas y femeninas en la pubertad.</div></div>
+      </div>
+      <div class="card-3d rounded-2xl p-5 reveal">
+        <canvas id="hormonaChart"></canvas>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ENFERMEDADES -->
+<section id="enfermedades" class="py-20 px-5">
+  <div class="max-w-5xl mx-auto">
+    <h2 class="text-3xl md:text-5xl font-black text-center mb-3 text-gradient reveal">Enfermedades Endocrinas</h2>
+    <p class="text-center text-gray-400 mb-8 text-sm reveal tap-hint">👆 Toca para conocer cada una</p>
+    <div class="grid md:grid-cols-2 gap-4">
+      <div class="card-3d rounded-2xl p-5 reveal border-l-4 border-green-500" onclick="toggle(this)"><div class="flex justify-between items-center"><h3 class="text-lg font-bold text-green-400">🩸 Diabetes</h3><span class="expand-icon text-green-400 text-sm">▼</span></div><p class="text-gray-300 text-sm mt-1">El cuerpo no produce o no usa bien la insulina.</p><div class="detail text-purple-200 text-sm">El azúcar se acumula en la sangre causando sed excesiva, cansancio y pérdida de peso. Hay tipo 1 (no produce insulina) y tipo 2 (no la usa bien). Se controla con dieta, ejercicio y medicación.</div></div>
+      <div class="card-3d rounded-2xl p-5 reveal border-l-4 border-blue-500" onclick="toggle(this)"><div class="flex justify-between items-center"><h3 class="text-lg font-bold text-blue-400">🐢 Hipotiroidismo</h3><span class="expand-icon text-blue-400 text-sm">▼</span></div><p class="text-gray-300 text-sm mt-1">La tiroides produce pocas hormonas.</p><div class="detail text-purple-200 text-sm">Provoca cansancio, metabolismo lento, aumento de peso, frío constante y piel seca. Se trata con hormonas tiroideas sintéticas que reemplazan las faltantes.</div></div>
+      <div class="card-3d rounded-2xl p-5 reveal border-l-4 border-orange-500" onclick="toggle(this)"><div class="flex justify-between items-center"><h3 class="text-lg font-bold text-orange-400">🔥 Hipertiroidismo</h3><span class="expand-icon text-orange-400 text-sm">▼</span></div><p class="text-gray-300 text-sm mt-1">La tiroides produce demasiadas hormonas.</p><div class="detail text-purple-200 text-sm">El metabolismo se acelera demasiado: pérdida de peso, nerviosismo, palpitaciones, sudoración y temblores. Es lo opuesto al hipotiroidismo.</div></div>
+      <div class="card-3d rounded-2xl p-5 reveal border-l-4 border-purple-500" onclick="toggle(this)"><div class="flex justify-between items-center"><h3 class="text-lg font-bold text-purple-400">📐 Gigantismo y Enanismo</h3><span class="expand-icon text-purple-400 text-sm">▼</span></div><p class="text-gray-300 text-sm mt-1">Alteraciones de la hormona del crecimiento.</p><div class="detail text-purple-200 text-sm">El gigantismo ocurre por exceso de hormona del crecimiento (estatura muy alta). El enanismo, por su deficiencia (estatura muy baja). Ambos se originan en la hipófisis.</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- QUIZ -->
+<section id="quiz" class="py-20 px-5 bg-black/20">
+  <div class="max-w-2xl mx-auto">
+    <h2 class="text-3xl md:text-5xl font-black text-center mb-3 text-gradient reveal">🎯 Quiz de 10 Preguntas</h2>
+    <p class="text-center text-gray-400 mb-8 text-sm reveal">Demuestra lo que aprendiste</p>
+    <div class="card-3d rounded-2xl p-6 reveal" style="cursor:default;">
+      <div class="w-full bg-white/10 rounded-full h-2 mb-5">
+        <div id="progressBar" class="bg-gradient-to-r from-purple-500 to-pink-500 h-2 rounded-full transition-all duration-300" style="width:0%"></div>
+      </div>
+      <div id="quizBox"></div>
+    </div>
+    <div id="quizResult" class="text-center mt-6 hidden"></div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer class="py-10 px-5 text-center border-t border-purple-500/30">
+  <p class="text-gradient text-2xl font-bold mb-2">🧬 EndoLab 3D</p>
+  <p class="text-gray-400 text-sm max-w-md mx-auto">El sistema endocrino trabaja junto al sistema nervioso para controlar casi todas las funciones del cuerpo.</p>
+  <p class="text-gray-600 text-xs mt-4">Exposición de Biología · Sistema Endocrino</p>
+</footer>
+
+</div>
+
+<script>
+// Toggle detalles
+function toggle(el){
+  const d=el.querySelector('.detail');
+  const icon=el.querySelector('.expand-icon');
+  if(d){d.classList.toggle('open'); if(icon)icon.classList.toggle('rotated');}
+}
+function closeMenu(){document.getElementById('mobileMenu').classList.remove('open');}
+
+// Partículas
+for(let i=0;i<20;i++){
+  const p=document.createElement('div');
+  p.className='particle';
+  const s=Math.random()*6+3;
+  p.style.width=s+'px';p.style.height=s+'px';
+  p.style.left=Math.random()*100+'vw';
+  p.style.animationDuration=(Math.random()*12+10)+'s';
+  p.style.animationDelay=Math.random()*10+'s';
+  document.body.appendChild(p);
+}
+// Hexágonos animados
+for(let i=0;i<4;i++){
+  const h=document.createElement('div');
+  h.className='hexagon';
+  const s=Math.random()*120+60;
+  h.style.width=s+'px';h.style.height=s+'px';
+  h.style.top=Math.random()*100+'vh';
+  h.style.left=Math.random()*100+'vw';
+  h.style.borderRadius='20%';
+  h.style.animationDuration=(Math.random()*30+20)+'s';
+  document.body.appendChild(h);
+}
+// Líneas onda
+for(let i=0;i<3;i++){
+  const w=document.createElement('div');
+  w.className='wave-line';
+  w.style.top=(20+i*30)+'vh';
+  w.style.animationDelay=i*2+'s';
+  document.body.appendChild(w);
+}
+
+// Scroll reveal
+const obs=new IntersectionObserver(es=>{
+  es.forEach(e=>{if(e.isIntersecting)e.target.classList.add('active');});
+},{threshold:0.1});
+document.querySelectorAll('.reveal').forEach(el=>obs.observe(el));
+
+// Gráfica
+new Chart(document.getElementById('hormonaChart'),{
+  type:'doughnut',
+  data:{
+    labels:['Insulina','Adrenalina','Crecimiento','Tiroxina','Sexuales'],
+    datasets:[{
+      data:[25,20,18,22,15],
+      backgroundColor:['#34d399','#facc15','#ec4899','#38bdf8','#f87171'],
+      borderColor:'#0a0e1a',borderWidth:3
+    }]
+  },
+  options:{
+    responsive:true,
+    plugins:{legend:{labels:{color:'#fff',font:{size:11}}},title:{display:true,text:'Hormonas clave',color:'#a78bfa'}}
+  }
+});
+
+// QUIZ 10 PREGUNTAS
+const preguntas=[
+ {q:"¿Qué son las hormonas?",o:["Células sanguíneas","Mensajeros químicos","Órganos","Huesos"],c:1},
+ {q:"¿Cuál es la glándula maestra?",o:["Tiroides","Páncreas","Hipófisis","Suprarrenales"],c:2},
+ {q:"¿Qué hormona regula el azúcar en sangre?",o:["Adrenalina","Insulina","Tiroxina","Cortisol"],c:1},
+ {q:"¿Dónde se encuentra la tiroides?",o:["En el cuello","En el cerebro","En los riñones","En el estómago"],c:0},
+ {q:"¿Función de las glándulas suprarrenales?",o:["Producir calcio","Regular sueño","Producir adrenalina y cortisol","Crear glóbulos"],c:2},
+ {q:"¿Qué glándula controla la temperatura, hambre y sed?",o:["Hipotálamo","Páncreas","Tiroides","Ovarios"],c:0},
+ {q:"¿Qué controlan las paratiroides?",o:["El azúcar","El calcio en sangre","La adrenalina","El sueño"],c:1},
+ {q:"¿Qué enfermedad causa metabolismo lento y cansancio?",o:["Hipertiroidismo","Diabetes","Hipotiroidismo","Gigantismo"],c:2},
+ {q:"¿Qué hormona producen los testículos?",o:["Estrógeno","Insulina","Testosterona","Tiroxina"],c:2},
+ {q:"¿Qué hormona prepara al cuerpo ante el peligro?",o:["Insulina","Adrenalina","Progesterona","Melatonina"],c:1}
+];
+let idx=0,score=0;
+const box=document.getElementById('quizBox');
+const bar=document.getElementById('progressBar');
+function render(){
+  bar.style.width=(idx/preguntas.length*100)+'%';
+  if(idx>=preguntas.length){
+    box.parentElement.style.display='none';
+    const r=document.getElementById('quizResult');
+    r.classList.remove('hidden');
+    let msg,emoji;
+    if(score>=8){msg='¡Excelente! Eres un experto';emoji='🏆';}
+    else if(score>=6){msg='¡Muy bien! Buen trabajo';emoji='🎉';}
+    else if(score>=4){msg='¡Bien! Sigue practicando';emoji='👍';}
+    else{msg='Repasa el contenido y reintenta';emoji='📚';}
+    r.innerHTML=`<div class="card-3d rounded-2xl p-8" style="cursor:default;">
+      <div class="text-6xl mb-3">${emoji}</div>
+      <p class="text-xl font-bold mb-2">${msg}</p>
+      <p class="text-4xl font-black text-gradient mb-4">${score} / ${preguntas.length}</p>
+      <button onclick="restart()" class="glow-btn bg-gradient-to-r from-purple-600 to-pink-600 px-6 py-2 rounded-full font-bold">Reintentar 🔄</button>
+    </div>`;
+    return;
+  }
+  const p=preguntas[idx];
+  box.innerHTML=`<div class="mb-3 text-xs text-purple-400 font-semibold">PREGUNTA ${idx+1} DE ${preguntas.length}</div>
+  <h3 class="text-lg md:text-xl font-bold mb-5">${p.q}</h3>
+  <div class="space-y-3">${p.o.map((o,i)=>`<button onclick="answer(${i})" class="quiz-opt w-full text-left p-4 rounded-xl bg-white/5 hover:bg-purple-600/40 active:scale-95 border border-purple-500/30 transition text-sm">${o}</button>`).join('')}</div>`;
+}
+function answer(i){
+  const btns=box.querySelectorAll('.quiz-opt');
+  const c=preguntas[idx].c;
+  btns[c].classList.add('bg-green-600/60','border-green-400');
+  if(i!==c)btns[i].classList.add('bg-red-600/60','border-red-400');
+  else score++;
+  btns.forEach(b=>b.disabled=true);
+  setTimeout(()=>{idx++;render();},900);
+}
+function restart(){
+  idx=0;score=0;
+  box.parentElement.style.display='block';
+  document.getElementById('quizResult').classList.add('hidden');
+  render();
+}
+render();
+</script>
+</body>
+</html>
